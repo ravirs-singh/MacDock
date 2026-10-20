@@ -63,10 +63,13 @@ public enum Framing {
     /// Returns the decoded value and the number of bytes consumed, or nil if the buffer
     /// does not yet hold a complete frame.
     public static func decode<T: Decodable>(_ type: T.Type, from buffer: Data) throws -> (T, Int)? {
+        // `Data` slices keep their original indices (startIndex is not 0 after
+        // removeFirst), so every range must be relative to startIndex.
         guard buffer.count >= 4 else { return nil }
-        let length = Int(UInt32(bigEndian: buffer.prefix(4).withUnsafeBytes { $0.loadUnaligned(as: UInt32.self) }))
+        let start = buffer.startIndex
+        let length = Int(UInt32(bigEndian: buffer[start ..< start + 4].withUnsafeBytes { $0.loadUnaligned(as: UInt32.self) }))
         guard buffer.count >= 4 + length else { return nil }
-        let body = buffer.subdata(in: 4 ..< 4 + length)
+        let body = buffer[start + 4 ..< start + 4 + length]
         return (try JSONDecoder().decode(type, from: body), 4 + length)
     }
 }
