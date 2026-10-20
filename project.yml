@@ -3,7 +3,7 @@ options:
   bundleIdPrefix: in.brainsick
 settings:
   base:
-    DEVELOPMENT_TEAM: 8DJBHL82MJ
+    DEVELOPMENT_TEAM: Z9MTV756LY
   deploymentTarget:
     iOS: "17.0"
     macOS: "14.0"
