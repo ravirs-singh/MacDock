@@ -33,6 +33,15 @@ open MacDock.xcodeproj
 2. Run **MacDockHelper** (scheme → My Mac). A dock icon appears in the menu bar showing a 6‑digit PIN.
 3. Run **MacDock** on your iPhone (same Wi‑Fi). Tap your Mac, enter the PIN once.
 
+## Everyday use
+
+- **Mac:** run `./install-helper.sh` once. It builds a Release helper into `/Applications`
+  and launches it; turn on **Launch at login** in the menu bar popover and forget about it.
+- **iPhone:** the app remembers the last Mac and reconnects automatically on launch and when
+  returning from the background. **Disconnect** in the ⋯ menu forgets it and shows the picker.
+- Free Personal Team builds expire after 7 days — re-run from Xcode (⌘R) to refresh.
+  A paid developer account extends this to a year.
+
 ## First-run permissions on the Mac
 
 - **Local Network** prompt — allow.

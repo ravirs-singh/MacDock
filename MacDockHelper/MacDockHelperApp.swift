@@ -1,8 +1,10 @@
 import SwiftUI
+import ServiceManagement
 
 @main
 struct MacDockHelperApp: App {
     @StateObject private var server = DockServer()
+    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     var body: some Scene {
         // A popover window rather than a tracked menu: if the process is ever paused
@@ -22,6 +24,9 @@ struct MacDockHelperApp: App {
                     Button("Forget all devices") { server.forgetAll() }
                 }
                 Divider()
+                Toggle("Launch at login", isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { _, enabled in setLaunchAtLogin(enabled) }
+                Divider()
                 Button("Quit MacDock") { NSApplication.shared.terminate(nil) }
                     .keyboardShortcut("q")
             }
@@ -29,5 +34,14 @@ struct MacDockHelperApp: App {
             .frame(width: 280)
         }
         .menuBarExtraStyle(.window)
+    }
+
+    private func setLaunchAtLogin(_ enabled: Bool) {
+        do {
+            if enabled { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+        } catch {
+            NSLog("Launch at login change failed: \(error)")
+            launchAtLogin = SMAppService.mainApp.status == .enabled
+        }
     }
 }

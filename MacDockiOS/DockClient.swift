@@ -27,7 +27,11 @@ final class DockClient: ObservableObject {
     func startBrowsing() {
         let browser = NWBrowser(for: .bonjour(type: macDockServiceType, domain: nil), using: .tcp)
         browser.browseResultsChangedHandler = { [weak self] results, _ in
-            Task { @MainActor in self?.discovered = Array(results) }
+            Task { @MainActor in
+                guard let self else { return }
+                self.discovered = Array(results)
+                self.autoConnectIfPossible()
+            }
         }
         browser.start(queue: .main)
         self.browser = browser
@@ -50,6 +54,7 @@ final class DockClient: ObservableObject {
                 case .failed(let error):
                     self.lastError = error.localizedDescription
                     self.state = .disconnected
+                    self.autoConnectIfPossible()
                 case .cancelled:
                     self.state = .disconnected
                 default: break
@@ -60,11 +65,25 @@ final class DockClient: ObservableObject {
         self.connection = connection
     }
 
-    func disconnect() {
+    /// User explicitly left; do not auto-reconnect until they pick a Mac again.
+    func disconnect(forget: Bool = false) {
         connection?.cancel()
         connection = nil
         buffer = Data()
         state = .disconnected
+        if forget { lastMacName = nil }
+    }
+
+    /// Connect to the last-used Mac as soon as Bonjour sees it.
+    func autoConnectIfPossible() {
+        guard state == .disconnected, let name = lastMacName,
+              let match = discovered.first(where: { Self.name(of: $0) == name }) else { return }
+        connect(to: match)
+    }
+
+    static func name(of result: NWBrowser.Result) -> String? {
+        if case .service(let name, _, _, _) = result.endpoint { return name }
+        return nil
     }
 
     /// Try a saved token first; fall back to asking the user for the PIN.
@@ -74,6 +93,7 @@ final class DockClient: ObservableObject {
         switch await send(.pair(pin: pin, token: token)) {
         case .paired(let newToken, let macName):
             savedToken = newToken
+            if case .service(let name, _, _, _)? = currentEndpoint { lastMacName = name }
             state = .connected(macName: macName)
             await refreshApps()
         case .unauthorized:
@@ -124,7 +144,11 @@ final class DockClient: ObservableObject {
                         self.resolveNext(with: response)
                     }
                 }
-                if isComplete || error != nil { self.disconnect(); return }
+                if isComplete || error != nil {
+                    self.disconnect()
+                    self.autoConnectIfPossible()
+                    return
+                }
                 self.receive()
             }
         }
@@ -141,6 +165,11 @@ final class DockClient: ObservableObject {
         // One token per Mac, keyed by its Bonjour name.
         if case .service(let name, _, _, _)? = currentEndpoint { return "token.\(name)" }
         return "token.default"
+    }
+
+    private var lastMacName: String? {
+        get { UserDefaults.standard.string(forKey: "lastMacName") }
+        set { UserDefaults.standard.set(newValue, forKey: "lastMacName") }
     }
 
     private var savedToken: String? {

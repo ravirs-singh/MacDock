@@ -63,8 +63,7 @@ struct MacPickerView: View {
     }
 
     private func name(of result: NWBrowser.Result) -> String {
-        if case .service(let name, _, _, _) = result.endpoint { return name }
-        return "Mac"
+        DockClient.name(of: result) ?? "Mac"
     }
 }
 
@@ -121,7 +120,7 @@ struct DockView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button("Refresh apps") { Task { await client.refreshApps() } }
-                    Button("Disconnect", role: .destructive) { client.disconnect() }
+                    Button("Disconnect", role: .destructive) { client.disconnect(forget: true) }
                 } label: { Image(systemName: "ellipsis.circle") }
             }
         }
