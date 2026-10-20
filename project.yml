@@ -21,6 +21,9 @@ targets:
       path: MacDockHelper/Info.plist
       properties:
         LSUIElement: true
+        NSAppleEventsUsageDescription: MacDock controls volume and locks the screen on your behalf.
+        NSLocalNetworkUsageDescription: MacDock accepts commands from your iPhone over the local network.
+        NSBonjourServices: [_macdock._tcp]
     entitlements:
       path: MacDockHelper/MacDockHelper.entitlements
       properties:
@@ -40,6 +43,14 @@ targets:
       - package: MacDockProtocol
     info:
       path: MacDockiOS/Info.plist
+      properties:
+        NSLocalNetworkUsageDescription: MacDock finds and controls your Mac over the local network.
+        NSBonjourServices: [_macdock._tcp]
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: in.brainsick.macdock
