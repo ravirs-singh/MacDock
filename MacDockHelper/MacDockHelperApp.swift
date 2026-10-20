@@ -6,6 +6,11 @@ struct MacDockHelperApp: App {
     @StateObject private var server = DockServer()
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
+    init() {
+        // Defer until the run loop is up so the alert can be shown.
+        DispatchQueue.main.async { SelfInstaller.promptIfNeeded() }
+    }
+
     var body: some Scene {
         // A popover window rather than a tracked menu: if the process is ever paused
         // (debugger, crash) an open menu would block input for the whole Mac.
@@ -24,6 +29,9 @@ struct MacDockHelperApp: App {
                     Button("Forget all devices") { server.forgetAll() }
                 }
                 Divider()
+                if !SelfInstaller.isInstalled {
+                    Button("Install to Applications…") { SelfInstaller.install() }
+                }
                 Toggle("Launch at login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, enabled in setLaunchAtLogin(enabled) }
                 Divider()

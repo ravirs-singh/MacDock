@@ -35,8 +35,10 @@ open MacDock.xcodeproj
 
 ## Everyday use
 
-- **Mac:** run `./install-helper.sh` once. It builds a Release helper into `/Applications`
-  and launches it; turn on **Launch at login** in the menu bar popover and forget about it.
+- **Mac:** the first time the helper runs from anywhere other than `/Applications` it offers
+  to copy itself there and relaunch (also available as **Install to Applications…** in the
+  menu bar popover). Then turn on **Launch at login** and forget about it.
+  `./install-helper.sh` does the same from the terminal with a Release build.
 - **iPhone:** the app remembers the last Mac and reconnects automatically on launch and when
   returning from the background. **Disconnect** in the ⋯ menu forgets it and shows the picker.
 - Free Personal Team builds expire after 7 days — re-run from Xcode (⌘R) to refresh.
