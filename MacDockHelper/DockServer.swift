@@ -12,6 +12,7 @@ final class DockServer: ObservableObject {
     private var listener: NWListener?
     private var connections: [ObjectIdentifier: ClientConnection] = [:]
     private let executor = CommandExecutor()
+    private let input = InputController()
     private let tokensKey = "pairedTokens"
 
     init() {
@@ -69,7 +70,7 @@ final class DockServer: ObservableObject {
         client.start()
     }
 
-    private func handle(_ command: DockCommand, from client: ClientConnection) async -> DockResponse {
+    private func handle(_ command: DockCommand, from client: ClientConnection) async -> DockResponse? {
         // Every connection must authenticate first.
         if case .pair(let pin, let token) = command {
             if let token, pairedTokens.contains(token) {
@@ -87,6 +88,10 @@ final class DockServer: ObservableObject {
             return .unauthorized
         }
         guard client.isAuthenticated else { return .unauthorized }
+        if command.isFireAndForget {
+            input.handle(command)
+            return nil
+        }
         return await executor.execute(command)
     }
 
@@ -97,7 +102,7 @@ final class DockServer: ObservableObject {
 
 /// One connected iPhone.
 final class ClientConnection {
-    typealias Handler = (DockCommand, ClientConnection) async -> DockResponse
+    typealias Handler = (DockCommand, ClientConnection) async -> DockResponse?
 
     var isAuthenticated = false
     private let connection: NWConnection
@@ -136,8 +141,7 @@ final class ClientConnection {
         while let (command, consumed) = try? Framing.decode(DockCommand.self, from: buffer) {
             buffer.removeFirst(consumed)
             Task { @MainActor in
-                let response = await self.handler(command, self)
-                self.send(response)
+                if let response = await self.handler(command, self) { self.send(response) }
             }
         }
     }

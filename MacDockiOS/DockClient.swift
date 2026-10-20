@@ -117,6 +117,12 @@ final class DockClient: ObservableObject {
         }
     }
 
+    /// Send without waiting for a reply (pointer, scroll, typing).
+    func fire(_ command: DockCommand) {
+        guard let connection, let data = try? Framing.encode(command) else { return }
+        connection.send(content: data, completion: .contentProcessed { _ in })
+    }
+
     // MARK: Wire
 
     func send(_ command: DockCommand) async -> DockResponse {

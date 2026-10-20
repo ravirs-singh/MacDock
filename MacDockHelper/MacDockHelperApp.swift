@@ -8,7 +8,10 @@ struct MacDockHelperApp: App {
 
     init() {
         // Defer until the run loop is up so the alert can be shown.
-        DispatchQueue.main.async { SelfInstaller.promptIfNeeded() }
+        DispatchQueue.main.async {
+            SelfInstaller.promptIfNeeded()
+            InputController.requestAccessibilityIfNeeded()
+        }
     }
 
     var body: some Scene {

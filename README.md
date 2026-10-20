@@ -1,7 +1,12 @@
 # MacDock
 
 Turn your iPhone into a remote dock for your Mac: launch apps, control media and
-volume, lock or sleep the Mac, and run Shortcuts — all over your local Wi‑Fi.
+volume, use the phone as a **trackpad and keyboard**, lock or sleep the Mac, and
+run Shortcuts — all over your local Wi‑Fi.
+
+**Trackpad tab:** one finger moves the pointer, tap clicks, double-tap double-clicks,
+two-finger pan scrolls, two-finger tap right-clicks, press-and-hold then move drags.
+The keyboard button forwards typing to the Mac; Esc/Tab/arrows are one tap away.
 
 ```
 ┌─────────────┐   Bonjour (_macdock._tcp)   ┌──────────────────────┐
@@ -48,7 +53,8 @@ open MacDock.xcodeproj
 
 - **Local Network** prompt — allow.
 - **Automation / Apple Events** — needed for volume and Lock Screen (System Events). macOS prompts the first time.
-- **Accessibility** (System Settings → Privacy & Security → Accessibility) — needed for media keys, which are posted as HID events.
+- **Accessibility** (System Settings → Privacy & Security → Accessibility) — needed for the
+  trackpad, keyboard and media keys, which are all posted as HID events. The helper asks on launch.
 
 ## Security model
 

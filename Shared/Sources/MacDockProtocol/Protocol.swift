@@ -16,6 +16,30 @@ public enum DockCommand: Codable, Equatable {
     case lockScreen
     case sleep
     case listApps
+
+    // Input events. These are fire-and-forget: the Mac sends no response.
+    case pointerMove(dx: Double, dy: Double)
+    case pointerDrag(dx: Double, dy: Double)
+    case dragBegin
+    case dragEnd
+    case click(button: MouseButton, count: Int)
+    case scroll(dx: Double, dy: Double)
+    case typeText(String)
+    case keyPress(SpecialKey)
+
+    /// True for commands that expect no reply.
+    public var isFireAndForget: Bool {
+        switch self {
+        case .pointerMove, .pointerDrag, .dragBegin, .dragEnd, .click, .scroll, .typeText, .keyPress: return true
+        default: return false
+        }
+    }
+}
+
+public enum MouseButton: String, Codable { case left, right }
+
+public enum SpecialKey: String, Codable {
+    case `return`, delete, escape, tab, space, up, down, left, right
 }
 
 public enum MediaKey: String, Codable {
