@@ -1,6 +1,9 @@
 name: MacDock
 options:
   bundleIdPrefix: in.brainsick
+settings:
+  base:
+    DEVELOPMENT_TEAM: 8DJBHL82MJ
   deploymentTarget:
     iOS: "17.0"
     macOS: "14.0"
