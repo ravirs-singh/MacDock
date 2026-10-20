@@ -13,6 +13,7 @@ public enum DockCommand: Codable, Equatable {
     case mediaKey(MediaKey)
     case volume(VolumeAction)
     case runShortcut(name: String)
+    case listShortcuts
     case lockScreen
     case sleep
     case listApps
@@ -57,6 +58,7 @@ public enum DockResponse: Codable, Equatable {
     case paired(token: String, macName: String)
     case unauthorized
     case apps([AppInfo])
+    case shortcuts([String])
     case error(String)
 }
 

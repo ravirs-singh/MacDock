@@ -196,6 +196,7 @@ struct DockView: View {
                 VStack(spacing: 16) {
                     mediaCard
                     quickActions
+                    CustomTilesSection()
                     appsCard
                 }
                 .padding(16)

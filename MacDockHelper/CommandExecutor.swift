@@ -26,6 +26,9 @@ final class CommandExecutor {
             return runAppleScript(volumeScript(for: action))
         case .runShortcut(let name):
             return runProcess("/usr/bin/shortcuts", ["run", name])
+        case .listShortcuts:
+            let output = await Task.detached { Self.capture("/usr/bin/shortcuts", ["list"]) }.value
+            return .shortcuts(output.split(separator: "\n").map(String.init).filter { !$0.isEmpty })
         case .lockScreen:
             // Post ⌃⌘Q as a CGEvent pair. The modifiers travel on the event itself,
             // so nothing is left held down if we are interrupted (unlike System Events).
@@ -33,6 +36,8 @@ final class CommandExecutor {
             return .ok
         case .sleep:
             return runProcess("/usr/bin/pmset", ["sleepnow"])
+        case .pointerMove, .pointerDrag, .dragBegin, .dragEnd, .click, .scroll, .typeText, .keyPress:
+            return .error("Input events are routed to InputController")
         case .listApps:
             // Scanning bundles and rendering icons takes seconds; keep it off the main thread.
             let apps = await Task.detached(priority: .userInitiated) { Self.installedApps() }.value
@@ -68,6 +73,20 @@ final class CommandExecutor {
         } catch {
             return .error(error.localizedDescription)
         }
+    }
+
+    /// Runs a fixed executable and returns its stdout.
+    nonisolated private static func capture(_ path: String, _ args: [String]) -> String {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: path)
+        process.arguments = args
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = FileHandle.nullDevice
+        do { try process.run() } catch { return "" }
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
+        return String(decoding: data, as: UTF8.self)
     }
 
     nonisolated private static func installedApps() -> [AppInfo] {
