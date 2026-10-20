@@ -27,13 +27,16 @@ final class CommandExecutor {
         case .runShortcut(let name):
             return runProcess("/usr/bin/shortcuts", ["run", name])
         case .lockScreen:
-            // Same as ⌃⌘Q.
-            return runProcess("/usr/bin/osascript", ["-e",
-                "tell application \"System Events\" to keystroke \"q\" using {command down, control down}"])
+            // Post ⌃⌘Q as a CGEvent pair. The modifiers travel on the event itself,
+            // so nothing is left held down if we are interrupted (unlike System Events).
+            Keyboard.press(keyCode: 12 /* Q */, flags: [.maskCommand, .maskControl])
+            return .ok
         case .sleep:
             return runProcess("/usr/bin/pmset", ["sleepnow"])
         case .listApps:
-            return .apps(installedApps())
+            // Scanning bundles and rendering icons takes seconds; keep it off the main thread.
+            let apps = await Task.detached(priority: .userInitiated) { Self.installedApps() }.value
+            return .apps(apps)
         }
     }
 
@@ -67,7 +70,7 @@ final class CommandExecutor {
         }
     }
 
-    private func installedApps() -> [AppInfo] {
+    nonisolated private static func installedApps() -> [AppInfo] {
         let dirs = ["/Applications", "/System/Applications", "\(NSHomeDirectory())/Applications"]
         var result: [AppInfo] = []
         for dir in dirs {
@@ -84,7 +87,7 @@ final class CommandExecutor {
         return result.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
-    private func iconPNG(for appURL: URL, size: CGFloat = 64) -> Data? {
+    nonisolated private static func iconPNG(for appURL: URL, size: CGFloat = 64) -> Data? {
         let icon = NSWorkspace.shared.icon(forFile: appURL.path)
         let small = NSImage(size: NSSize(width: size, height: size), flipped: false) { rect in
             icon.draw(in: rect)
@@ -92,6 +95,18 @@ final class CommandExecutor {
         }
         guard let tiff = small.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) else { return nil }
         return rep.representation(using: .png, properties: [:])
+    }
+}
+
+/// Posts a regular key press. Flags are attached to each event, never held globally.
+enum Keyboard {
+    static func press(keyCode: CGKeyCode, flags: CGEventFlags) {
+        let source = CGEventSource(stateID: .hidSystemState)
+        for down in [true, false] {
+            guard let event = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: down) else { continue }
+            event.flags = flags
+            event.post(tap: .cghidEventTap)
+        }
     }
 }
 

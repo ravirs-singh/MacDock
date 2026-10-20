@@ -103,6 +103,7 @@ struct DockView: View {
     @EnvironmentObject private var client: DockClient
     let macName: String
     @State private var search = ""
+    @State private var pendingConfirm: DockCommand?
 
     private let columns = [GridItem(.adaptive(minimum: 84), spacing: 16)]
 
@@ -125,6 +126,15 @@ struct DockView: View {
             }
         }
         .refreshable { await client.refreshApps() }
+        .confirmationDialog(
+            pendingConfirm == .sleep ? "Put the Mac to sleep?" : "Lock the Mac screen?",
+            isPresented: Binding(get: { pendingConfirm != nil }, set: { if !$0 { pendingConfirm = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button(pendingConfirm == .sleep ? "Sleep" : "Lock", role: .destructive) {
+                if let command = pendingConfirm { client.run(command) }
+            }
+        }
     }
 
     private var controlsSection: some View {
@@ -137,8 +147,8 @@ struct DockView: View {
                 tile("Vol −", "speaker.minus.fill") { client.run(.volume(.down)) }
                 tile("Vol +", "speaker.plus.fill") { client.run(.volume(.up)) }
                 tile("Mute", "speaker.slash.fill") { client.run(.volume(.mute)) }
-                tile("Lock", "lock.fill") { client.run(.lockScreen) }
-                tile("Sleep", "moon.zzz.fill") { client.run(.sleep) }
+                tile("Lock", "lock.fill") { pendingConfirm = .lockScreen }
+                tile("Sleep", "moon.zzz.fill") { pendingConfirm = .sleep }
             }
         }
     }
