@@ -1,0 +1,53 @@
+# MacDock
+
+Turn your iPhone into a remote dock for your Mac: launch apps, control media and
+volume, lock or sleep the Mac, and run Shortcuts — all over your local Wi‑Fi.
+
+```
+┌─────────────┐   Bonjour (_macdock._tcp)   ┌──────────────────────┐
+│  iPhone app │ ──────── TCP / JSON ──────▶ │ MacDock Helper (menu │
+│  (SwiftUI)  │ ◀───────────────────────── │ bar app, macOS)      │
+└─────────────┘                             └──────────────────────┘
+```
+
+## Layout
+
+| Path | What |
+|---|---|
+| `Shared/` | Swift package `MacDockProtocol` — commands, responses, wire framing |
+| `MacDockHelper/` | macOS menu-bar app: Bonjour listener, PIN pairing, command executor |
+| `MacDockiOS/` | iOS app: discovery, pairing screen, dock grid |
+| `project.yml` | [XcodeGen](https://github.com/yonaskolb/XcodeGen) spec that generates `MacDock.xcodeproj` |
+
+## Build
+
+```bash
+brew install xcodegen
+cd MacDock
+xcodegen generate
+open MacDock.xcodeproj
+```
+
+1. In Xcode, select your team under **Signing & Capabilities** for both targets
+   (bundle IDs default to `in.brainsick.macdock` / `.helper` — change in `project.yml` if needed).
+2. Run **MacDockHelper** (scheme → My Mac). A dock icon appears in the menu bar showing a 6‑digit PIN.
+3. Run **MacDock** on your iPhone (same Wi‑Fi). Tap your Mac, enter the PIN once.
+
+## First-run permissions on the Mac
+
+- **Local Network** prompt — allow.
+- **Automation / Apple Events** — needed for volume and Lock Screen (System Events). macOS prompts the first time.
+- **Accessibility** (System Settings → Privacy & Security → Accessibility) — needed for media keys, which are posted as HID events.
+
+## Security model
+
+- Pairing uses a one-time 6‑digit PIN displayed on the Mac; a random token is issued and stored on the iPhone (`UserDefaults`) and the Mac.
+- The PIN rotates after every successful pairing. "Forget all devices" in the menu bar revokes every token.
+- Traffic is plaintext on your LAN. If you want TLS, swap `NWParameters.tcp` for `NWParameters(tls:…)` with a self-signed cert pinned on the phone.
+
+## Roadmap ideas
+
+- Custom tiles (user-defined Shortcuts / URLs) with iCloud sync
+- Live "now playing" info pushed from the Mac
+- Widgets and Lock Screen controls on iPhone
+- Apple Watch companion

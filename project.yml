@@ -1,0 +1,47 @@
+name: MacDock
+options:
+  bundleIdPrefix: in.brainsick
+  deploymentTarget:
+    iOS: "17.0"
+    macOS: "14.0"
+  xcodeVersion: "15.0"
+
+packages:
+  MacDockProtocol:
+    path: Shared
+
+targets:
+  MacDockHelper:
+    type: application
+    platform: macOS
+    sources: [MacDockHelper]
+    dependencies:
+      - package: MacDockProtocol
+    info:
+      path: MacDockHelper/Info.plist
+      properties:
+        LSUIElement: true
+    entitlements:
+      path: MacDockHelper/MacDockHelper.entitlements
+      properties:
+        com.apple.security.app-sandbox: false
+        com.apple.security.automation.apple-events: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: in.brainsick.macdock.helper
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_HARDENED_RUNTIME: true
+
+  MacDock:
+    type: application
+    platform: iOS
+    sources: [MacDockiOS]
+    dependencies:
+      - package: MacDockProtocol
+    info:
+      path: MacDockiOS/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: in.brainsick.macdock
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1,2"
