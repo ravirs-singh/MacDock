@@ -56,3 +56,17 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: in.brainsick.macdock
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1,2"
+
+schemes:
+  MacDockHelper:
+    build:
+      targets:
+        MacDockHelper: all
+    run:
+      config: Debug
+  MacDock:
+    build:
+      targets:
+        MacDock: all
+    run:
+      config: Debug
