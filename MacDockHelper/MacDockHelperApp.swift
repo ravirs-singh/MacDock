@@ -5,6 +5,7 @@ import ServiceManagement
 struct MacDockHelperApp: App {
     @StateObject private var server = DockServer()
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var accessibilityGranted = AXIsProcessTrusted()
 
     init() {
         // Defer until the run loop is up so the alert can be shown.
@@ -25,6 +26,19 @@ struct MacDockHelperApp: App {
                 }
                 Text(server.isRunning ? "Advertising as \(Host.current().localizedName ?? "Mac")" : "Stopped")
                     .font(.callout).foregroundStyle(.secondary)
+                Divider()
+                HStack(spacing: 8) {
+                    Circle().fill(accessibilityGranted ? .green : .orange).frame(width: 8, height: 8)
+                    Text(accessibilityGranted ? "Accessibility granted" : "Accessibility needed for trackpad")
+                        .font(.callout)
+                    Spacer()
+                    if !accessibilityGranted {
+                        Button("Open Settings") {
+                            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
+                        }
+                    }
+                }
+                .onAppear { accessibilityGranted = AXIsProcessTrusted() }
                 Divider()
                 Text("Paired devices: \(server.pairedTokens.count)").font(.callout)
                 HStack {
